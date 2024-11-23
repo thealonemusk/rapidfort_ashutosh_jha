@@ -2,9 +2,8 @@ from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS  
 from werkzeug.utils import secure_filename
 import os
-from docx2pdf import convert
+import subprocess
 from PyPDF2 import PdfReader, PdfWriter
-import pythoncom
 import logging
 import tempfile
 from datetime import datetime
@@ -16,6 +15,7 @@ class Config:
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'docx'}
+    LIBREOFFICE_TIMEOUT = 30  # timeout in seconds for conversion
 
 app.config.from_object(Config)
 
@@ -48,6 +48,46 @@ def cleanup_old_files():
             except Exception as e:
                 logging.error(f"Error cleaning up file {filename}: {e}")
 
+def convert_docx_to_pdf(input_path, output_path):
+    """Convert DOCX to PDF using LibreOffice"""
+    try:
+        # Create a temporary directory for conversion
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Prepare the LibreOffice command
+            cmd = [
+                'soffice',
+                '--headless',
+                '--convert-to', 'pdf',
+                '--outdir', temp_dir,
+                input_path
+            ]
+            
+            # Execute the conversion command
+            process = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=Config.LIBREOFFICE_TIMEOUT
+            )
+            
+            if process.returncode != 0:
+                raise Exception(f"Conversion failed: {process.stderr.decode()}")
+            
+            # Get the converted file
+            temp_pdf = os.path.join(temp_dir, os.path.splitext(os.path.basename(input_path))[0] + '.pdf')
+            
+            # Move to final destination
+            if os.path.exists(temp_pdf):
+                with open(temp_pdf, 'rb') as src, open(output_path, 'wb') as dst:
+                    dst.write(src.read())
+            else:
+                raise Exception("Converted PDF not found")
+            
+    except subprocess.TimeoutExpired:
+        raise Exception("Conversion timed out")
+    except Exception as e:
+        raise Exception(f"Conversion error: {str(e)}")
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
@@ -56,7 +96,7 @@ def health_check():
 @app.route('/api/convert', methods=['POST'])
 def upload_file():
     try:
-        cleanup_old_files()  # Clean up old files before processing new ones
+        cleanup_old_files()
         
         if 'file' not in request.files:
             return jsonify({'error': 'No file part in the request'}), 400
@@ -81,11 +121,7 @@ def upload_file():
 
         # Save and convert file
         file.save(docx_path)
-        pythoncom.CoInitialize()
-        try:
-            convert(docx_path, pdf_path)
-        finally:
-            pythoncom.CoUninitialize()
+        convert_docx_to_pdf(docx_path, pdf_path)
 
         # Add password if provided
         if password:
