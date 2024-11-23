@@ -2,13 +2,21 @@
 
 ## API URL fOR TESTING
 
+Code on the api branch of the same repository
+
 https://rapidfort-ashutosh-jha-2.onrender.com
 
-ENDPOINTS: 
+ENDPOINTS:
 
 * Health check: `GET /api/health`
 * Convert DOCX to PDF: `POST /api/convert`
 * Download PDF: `GET /api/download/<filename>`
+
+## Docker Hub Links
+
+app -> https://hub.docker.com/repository/docker/thealonemusk/d2p/general
+
+api ->
 
 ## Project Overview
 
