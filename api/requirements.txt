@@ -1,0 +1,7 @@
+flask
+flask-cors
+Werkzeug
+docx2pdf
+PyPDF2
+python-dotenv
+gunicorn
