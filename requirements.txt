@@ -1,4 +1,6 @@
-Flask
-flask-uploads
-docx2pdf
-PyPDF2
+Flask==2.3.2
+flask-cors==5.0.0
+werkzeug==2.3.5
+docx2pdf==0.1.6
+PyPDF2==3.0.1
+pywin32==308
