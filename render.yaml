@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: docx-pdf-converter
+    env: docker
+    plan: free
+    branch: main
+    dockerCommand: gunicorn --workers 2 --timeout 120 --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: UPLOAD_FOLDER
+        value: /tmp/uploads
+      - key: MAX_CONTENT_LENGTH
+        value: 16777216
