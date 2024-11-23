@@ -5,3 +5,5 @@ docx2pdf
 PyPDF2
 python-dotenv
 gunicorn
+pythoncom
+flask-uploads

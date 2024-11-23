@@ -1,5 +1,15 @@
 # Project Documentation
 
+## API URL fOR TESTING
+
+https://rapidfort-ashutosh-jha-api.onrender.com
+
+ENDPOINTS: 
+
+* Health check: `GET /api/health`
+* Convert DOCX to PDF: `POST /api/convert`
+* Download PDF: `GET /api/download/<filename>`
+
 ## Project Overview
 
 This project is a Flask-based application that includes the following features:
