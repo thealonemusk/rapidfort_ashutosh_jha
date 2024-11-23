@@ -1,105 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOCX to PDF Converter</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .upload-form {
-            margin-bottom: 20px;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>DOCX to PDF Converter</h1>
-        <div class="upload-form">
-            <form id="uploadForm">
-                <input type="file" id="fileInput" accept=".docx" required>
-                <button type="submit">Upload and Convert</button>
-            </form>
-        </div>
-        <div id="result" class="result"></div>
-    </div>
-
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            const fileInput = document.getElementById('fileInput');
-            const resultDiv = document.getElementById('result');
-            
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    resultDiv.className = 'result success';
-                    resultDiv.innerHTML = `
-                        <p>${data.message}</p>
-                        <p>Original file: ${data.original_file}</p>
-                        <p>PDF file: ${data.pdf_file}</p>
-                        <p><a href="${data.download_url}" target="_blank">Download PDF</a></p>
-                    `;
-                } else {
-                    resultDiv.className = 'result error';
-                    resultDiv.textContent = data.error || 'An error occurred';
-                }
-            } catch (error) {
-                resultDiv.className = 'result error';
-                resultDiv.textContent = 'An error occurred while uploading the file';
-            }
-            
-            resultDiv.style.display = 'block';
-        });
-    </script>
-</body>
-</html> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -230,34 +128,26 @@
             40% { transform: scale(1); }
         }
 
-        .result {
-            margin-top: 1.5rem;
-            padding: 1rem;
+        #uploadedFileActions {
+            display: none;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .action-button {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
             border-radius: 5px;
             font-size: 0.875rem;
-            display: none;
-        }
-
-        .success {
-            background-color: #c6f6d5;
-            color: #2f855a;
-            border: 1px solid #9ae6b4;
-        }
-
-        .error {
-            background-color: #fed7d7;
-            color: #9b2c2c;
-            border: 1px solid #feb2b2;
-        }
-
-        .result a {
-            color: var(--primary-color);
-            text-decoration: none;
             font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
-        .result a:hover {
-            text-decoration: underline;
+        .action-button:hover {
+            background-color: #38a169;
         }
     </style>
 </head>
@@ -275,61 +165,47 @@
             <span></span><span></span><span></span>
             <p>Converting your file...</p>
         </div>
-        <div id="result" class="result"></div>
+        <div id="uploadedFileActions">
+            <p>File ready for download!</p>
+            <button class="action-button" id="downloadButton">Download PDF</button>
+        </div>
     </div>
 
     <script>
         const fileInput = document.getElementById('fileInput');
         const uploadArea = document.getElementById('uploadArea');
         const convertButton = document.getElementById('convertButton');
-        const resultDiv = document.getElementById('result');
         const loadingDiv = document.getElementById('loading');
+        const uploadedFileActions = document.getElementById('uploadedFileActions');
+        const downloadButton = document.getElementById('downloadButton');
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
+        uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
             uploadArea.classList.add('dragover');
-        }
+        });
 
-        function unhighlight() {
+        uploadArea.addEventListener('dragleave', () => {
             uploadArea.classList.remove('dragover');
-        }
+        });
 
-        uploadArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
             fileInput.files = files;
             updateFileName();
-        }
+        });
 
         fileInput.addEventListener('change', updateFileName);
 
         function updateFileName() {
             if (fileInput.files.length > 0) {
-                uploadArea.querySelector('.upload-text').textContent = fileInput.files[0].name;
+                const fileName = fileInput.files[0].name;
+                uploadArea.querySelector('.upload-text').textContent = fileName;
                 convertButton.disabled = false;
             } else {
-                uploadArea.querySelector('.upload-text').textContent = 'Drag and drop your DOCX file here';
-                convertButton.disabled = true;
+                resetUploadArea();
             }
         }
 
@@ -339,7 +215,6 @@
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
-            resultDiv.style.display = 'none';
             loadingDiv.style.display = 'block';
             convertButton.disabled = true;
 
@@ -352,28 +227,30 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    resultDiv.className = 'result success';
-                    resultDiv.innerHTML = `
-                        <p>${data.message}</p>
-                        <p>Original file: ${data.original_file}</p>
-                        <p>PDF file: ${data.pdf_file}</p>
-                        <p><a href="${data.download_url}" target="_blank">Download PDF</a></p>
-                    `;
+                    showUploadedFileActions(data.download_url);
                 } else {
-                    resultDiv.className = 'result error';
-                    resultDiv.textContent = data.error || 'An error occurred';
+                    alert(data.error || 'An error occurred');
                 }
-            } catch (error) {
-                resultDiv.className = 'result error';
-                resultDiv.textContent = 'An error occurred while uploading the file';
+            } catch {
+                alert('An error occurred while uploading the file.');
+            } finally {
+                loadingDiv.style.display = 'none';
+                convertButton.disabled = false;
             }
-
-            loadingDiv.style.display = 'none';
-            resultDiv.style.display = 'block';
-            convertButton.disabled = false;
-            fileInput.value = '';
-            updateFileName();
         });
+
+        function showUploadedFileActions(downloadUrl) {
+            uploadedFileActions.style.display = 'block';
+            downloadButton.onclick = () => {
+                window.open(downloadUrl, '_blank');
+            };
+        }
+
+        function resetUploadArea() {
+            uploadArea.querySelector('.upload-text').textContent = 'Drag and drop your DOCX file here';
+            convertButton.disabled = true;
+            uploadedFileActions.style.display = 'none';
+        }
     </script>
 </body>
 </html>
