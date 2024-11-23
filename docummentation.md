@@ -2,7 +2,7 @@
 
 ## API URL fOR TESTING
 
-https://rapidfort-ashutosh-jha-api.onrender.com
+https://rapidfort-ashutosh-jha-2.onrender.com
 
 ENDPOINTS: 
 
